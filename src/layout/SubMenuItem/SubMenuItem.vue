@@ -1,0 +1,20 @@
+<template>
+  <a-sub-menu :key="menuInfo.path">
+    <template #title>
+      <icon-font :type="menuInfo.iconType" />
+      <span>{{ menuInfo.title }}</span>
+    </template>
+    <template v-for="item in menuInfo.children">
+      <a-menu-item v-if="!item.children" :key="item.path">
+        <icon-font :type="item.iconType" />
+        <span>{{ item.title }}</span>
+      </a-menu-item>
+      <SubMenuItem v-else :key="item.path!" :menu-info="item" />
+    </template>
+  </a-sub-menu>
+</template>
+
+<script setup lang="ts">
+import { MenuType } from '@/api/menu/model'
+defineProps<{ menuInfo: MenuType}>()  //多值传值
+</script>

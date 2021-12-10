@@ -1,0 +1,153 @@
+<template>
+  <a-layout :style="layoutStyle">
+    <a-layout-sider
+      v-show="!breakPointValue"
+      v-model:collapsed="collapsed"
+      :style="siderStyle"
+      :width="240"
+      :trigger="null"
+      breakpoint="lg"
+      @breakpoint="breakpoint"
+    >
+      <SiderContent v-show="!breakPointValue" />
+    </a-layout-sider>
+    <a-drawer :visible="drawerSider" :closable="false" :width="240" placement="left" :bodyStyle="drawerBodyStyle" @close="onClose">
+      <SiderContent />
+    </a-drawer>
+    <a-layout :style="layoutStyle">
+      <a-layout-header :style="headerStyle">
+        <div class="headerBox">
+          <div class="left">
+            <MenuFoldOutlined v-if="collapsed" @click="handleCollapsed" />
+            <MenuUnfoldOutlined v-else @click="handleCollapsed" />
+            <Breadcrumb/>
+          </div>
+          <div class="right">
+            <a-avatar :size="36" :src="avatar" />
+            <a-dropdown>
+              <a class="ant-dropdown-link" @click="e => e.preventDefault()"> <MoreOutlined /></a>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item>
+                    <a href="javascript:;">个人中心</a>
+                  </a-menu-item>
+                  <a-menu-divider />
+                  <a-menu-item>
+                    <a href="javascript:;" @click="loginOut">退出登录</a>
+                  </a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </div>
+        </div>
+      </a-layout-header>
+      <a-layout-content :style="contentStyle">
+        <router-view v-slot="{ Component }">
+          <transition name="fade">
+            <div id="appContent" class="g-scrollbar">
+              <component :is="Component" />
+            </div>
+          </transition>
+        </router-view>
+      </a-layout-content>
+      <a-layout-footer :style="footerStyle">Vite2 Vue3 </a-layout-footer>
+    </a-layout>
+  </a-layout>
+</template>
+
+<script setup lang="ts">
+import SiderContent from './SiderContent'
+import { reactive, ref, toRefs, watchEffect, computed } from 'vue'
+import { RouteLocationMatched, useRoute, useRouter } from 'vue-router'
+import { removeAllToken } from '@/utils/auth'
+import avatar from '@/assets/svg/avatar.svg'
+import { useAppStore } from '@/store/modules/app'
+import Breadcrumb from "./Breadcrumb"
+const layoutStyle = {
+  height: '100vh',
+  backgroundColor: '#fafdff',
+}
+const siderStyle = {
+  height: '100vh',
+  backgroundColor: '#fff',
+}
+const headerStyle = {
+  background: '#fff',
+  padding: '0px 18px',
+}
+const contentStyle = {
+  paddingTop: '0px',
+}
+const footerStyle = {
+  textAlign: 'center',
+  padding: '6px 0px',
+}
+const drawerBodyStyle = {
+  padding: '0px',
+}
+const Router = useRouter()
+const appStore = useAppStore()
+const collapsed = ref(false)
+const breakPointValue = ref(false)
+
+const drawerSider = computed(() => {
+  return appStore.drawerStatus
+})
+const breakpoint = (value: boolean) => {
+  breakPointValue.value = value
+  // 是否触发断点 初始决定是否启用
+  // Store.commit('appInfo/SET_drawerStatus', value)
+}
+const handleCollapsed = () => {
+  collapsed.value = !collapsed.value
+  if (breakPointValue.value) {
+    appStore.setDrawerStatus(true)
+  }
+}
+const onClose = () => {
+  collapsed.value = true
+  appStore.setDrawerStatus(false)
+}
+
+// 面包屑逻辑
+const currentRouteInfo = reactive({
+  matchList: [],
+})
+// 退出登录
+const loginOut = () => {
+  removeAllToken()
+  Router.push({ path: '/login' })
+}
+</script>
+
+<style lang="less" scoped>
+.headerBox {
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left,
+.right {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  > :not(:last-child) {
+    margin-right: 22px;
+  }
+}
+#appContent {
+  height: calc(100vh - 98px);
+  padding: 16px;
+  overflow: auto;
+  background-color: #fff;
+  box-shadow: 6px 6px 4px #f0f2f5;
+}
+.ant-breadcrumb {
+  padding: 0 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+</style>
